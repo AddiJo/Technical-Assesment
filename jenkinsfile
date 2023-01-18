@@ -1,0 +1,60 @@
+def IMAGENAME = "aplikasi"
+def IMAGETAG = 'latest'
+def gitCommit() {
+    return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+}
+def getLatestTag(){
+    return sh(returnStdout: true, script: 'git describe --tags --always').trim()
+}
+pipeline {
+    agent {
+       node {
+            label 'master'
+        }
+    }
+    
+    stages{
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: 'prod']], extensions: [[$class: 'WipeWorkspace']], userRemoteConfigs: [[credentialsId: 'credential-id-git', refspec: '+refs/tags/*:refs/remotes/origin/tags/*', url: 'https://gitlab.com/addijoparas/technical-assesment.git']]])
+                script{
+                    IMAGETAG = getLatestTag()
+                    REGISTRY = '${env.docker_registry}'
+                }
+            }
+        }
+        stage('Build'){
+            steps {
+                echo 'Building..'
+                sh "git checkout -b deploy/${IMAGETAG} ${IMAGETAG}"
+                sh "cd aplikasi-module && mvn clean install -DskipTests -Dmaven.repo.local=$HOME/.m2/STAGING"
+            }
+        }
+        stage('Docker Build'){
+            steps {
+                echo 'Building..'
+                sh "docker tag addijo/${IMAGENAME}:latest addijo/${IMAGENAME}:${IMAGETAG}"
+            }
+        }
+        stage('Push docker image'){
+            steps {
+                withDockerRegistry([ credentialsId: "credential-docker", url: "https://hub.docker.com/" ]){
+                    echo 'Push Docker image..'
+                    sh "docker push addijo/${IMAGENAME}:${IMAGETAG}"   
+                }
+            }
+        }
+
+        stage('Deploy To PROD Approval'){
+             steps{
+                 input message: "Build and Push Docker image Success", ok: 'Continue Deploy To DEV ?'
+             }
+         }
+        
+        stage("Deploy to Kubernetes"){
+            steps{
+                sh "ansible-playbook --user=root /playbook/deploy.yaml --extra-vars imageNameDev=addijo/${IMAGENAME} --extra-vars namespace=apps --extra-vars imageTag=${IMAGETAG} --extra-vars projectName=${HELM_FOLDER_NAME}"
+            }
+       }
+    }
+}
