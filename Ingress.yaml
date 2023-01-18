@@ -17,6 +17,7 @@ spec:
               serviceName: apps
               servicePort: 8080
             path: /
+            pathType: Prefix
   tls:
     - hosts:
         - apps.testing.com
