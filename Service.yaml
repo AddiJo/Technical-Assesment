@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apps.fullname" . }}
+  labels:
+    k8s-app: {{ include "apps.name" . }}
+spec:
+  type: {{ .Values.service.type }}
+  sessionAffinity: None
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+
+  selector:
+    k8s-app: {{ include "apps.name" . }}
