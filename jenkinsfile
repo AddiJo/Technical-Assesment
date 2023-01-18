@@ -1,5 +1,6 @@
 def IMAGENAME = "aplikasi"
 def IMAGETAG = 'latest'
+def HELM_FOLDER_NAME = "apps"
 def gitCommit() {
     return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 }
