@@ -12,5 +12,5 @@
     command: "helm delete --purge {{ projectName }}"
     ignore_errors: yes
   - name: Deploy Apps Maven Docker
-    command: "helm install --name={{ projectName }} --namespace={{ namespace }} /root/deployment/{{ projectName }} --set image.repository={{ imageNameDev }} --set image.tag={{ imageTag }} --set namespace={{ namespace }}"
+    command: "helm install --name={{ projectName }} --namespace={{ namespace }} /root/deployment/{{ projectName }} --set image.repository={{ imageName }} --set image.tag={{ imageTag }} --set namespace={{ namespace }}"
     ignore_errors: no
