@@ -27,7 +27,7 @@ pipeline {
             steps {
                 echo 'Building..'
                 sh "git checkout -b deploy/${IMAGETAG} ${IMAGETAG}"
-                sh "cd aplikasi-module && mvn clean install -DskipTests -Dmaven.repo.local=$HOME/.m2/STAGING"
+                sh "cd aplikasi-module && mvn clean install package docker:build -DskipTests -Dmaven.repo.local=$HOME/.m2/STAGING"
             }
         }
         stage('Docker Build'){
